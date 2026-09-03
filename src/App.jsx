@@ -5,6 +5,7 @@ import ScanDashboard from './pages/ScanDashboard';
 import WaliDashboard from './pages/WaliDashboard';
 import WaliPresensi from './pages/WaliPresensi';
 import WaliPoin from './pages/WaliPoin';
+import WaliLogin from './pages/WaliLogin';
 import { ChevronLeft } from 'lucide-react';
 
 // Placeholder untuk halaman lain
@@ -76,6 +77,7 @@ function App() {
         <Route path="/scan/activities" element={<Layout><ScanDashboard /></Layout>} />
         
         {/* Wali Murid */}
+        <Route path="/login" element={<WaliLogin />} />
         <Route path="/wali" element={<WaliDashboard />} />
         <Route path="/wali/presensi" element={<WaliPresensi />} />
         <Route path="/wali/poin" element={<WaliPoin />} />

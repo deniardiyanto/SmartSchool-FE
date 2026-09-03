@@ -9,7 +9,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 
-export default function LoginPage() {
+export default function WaliLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +23,9 @@ export default function LoginPage() {
 
     setError('');
 
+    // =========================
+    // VALIDASI
+    // =========================
     if (!username.trim()) {
       setError('Username / NISN wajib diisi.');
       return;
@@ -36,33 +39,140 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      /*
-       * TODO:
-       * Ganti bagian ini dengan API login sebenarnya.
-       *
-       * Contoh:
-       *
-       * const response = await api.post('/auth/login', {
-       *   username,
-       *   password,
-       * });
-       *
-       * localStorage.setItem('token', response.data.token);
-       */
+      // =========================
+      // CALL API LOGIN
+      // =========================
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password,
+          clientType: 2,
+        }),
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // =========================
+      // BACA RESPONSE
+      // =========================
+      let result = null;
 
-      // Login dummy
-      if (username === 'wali' && password === '123456') {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userRole', 'wali');
-
-        navigate('/wali');
-      } else {
-        setError('Username atau password salah.');
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('Response bukan JSON:', jsonError);
       }
+
+      console.log('Login API Response:', result);
+
+      // =========================
+      // HTTP ERROR
+      // =========================
+      if (!response.ok) {
+        const errorMessage =
+          result?.message ||
+          result?.Message ||
+          result?.title ||
+          result?.Title ||
+          'Username atau password salah.';
+
+        setError(errorMessage);
+        return;
+      }
+
+      // =========================
+      // CEK STATUS SUCCESS API
+      // =========================
+      if (
+        result?.success === false ||
+        result?.Success === false
+      ) {
+        const errorMessage =
+          result?.message ||
+          result?.Message ||
+          'Login gagal.';
+
+        setError(errorMessage);
+        return;
+      }
+
+      // =========================
+      // AMBIL DATA LOGIN
+      // =========================
+      const loginData =
+        result?.data ??
+        result?.Data ??
+        null;
+
+      console.log('Login Data:', loginData);
+
+      // =========================
+      // SIMPAN RESPONSE LOGIN
+      // =========================
+      localStorage.setItem(
+        'loginResponse',
+        JSON.stringify(result)
+      );
+
+      // =========================
+      // SIMPAN DATA USER
+      // =========================
+      if (loginData) {
+        localStorage.setItem(
+          'user',
+          JSON.stringify(loginData)
+        );
+      }
+
+      // =========================
+      // STATUS LOGIN
+      // =========================
+      localStorage.setItem(
+        'isAuthenticated',
+        'true'
+      );
+
+      localStorage.setItem(
+        'userRole',
+        'wali'
+      );
+
+      // =========================
+      // AMBIL TOKEN
+      // =========================
+      const token =
+        loginData?.token ??
+        loginData?.Token ??
+        loginData?.accessToken ??
+        loginData?.AccessToken ??
+        result?.token ??
+        result?.Token ??
+        result?.accessToken ??
+        result?.AccessToken;
+
+      if (token) {
+        localStorage.setItem(
+          'token',
+          token
+        );
+      }
+
+      // =========================
+      // LOGIN BERHASIL
+      // =========================
+      navigate('/wali', {
+        replace: true,
+      });
+
     } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      console.error('Login Error:', err);
+
+      setError(
+        'Tidak dapat terhubung ke server. Silakan coba lagi.'
+      );
     } finally {
       setLoading(false);
     }
@@ -72,10 +182,25 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
-        {/* ================= LOGO / HEADER ================= */}
+        {/* =========================
+            LOGO / HEADER
+        ========================= */}
         <div className="text-center mb-6">
 
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-sm mb-4">
+          <div
+            className="
+              mx-auto
+              w-16
+              h-16
+              rounded-2xl
+              bg-blue-600
+              flex
+              items-center
+              justify-center
+              shadow-sm
+              mb-4
+            "
+          >
             <GraduationCap
               size={34}
               className="text-white"
@@ -91,8 +216,19 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* ================= LOGIN CARD ================= */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        {/* =========================
+            LOGIN CARD
+        ========================= */}
+        <div
+          className="
+            bg-white
+            rounded-2xl
+            p-6
+            shadow-sm
+            border
+            border-gray-100
+          "
+        >
 
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-800">
@@ -104,23 +240,48 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* ================= ERROR ================= */}
+          {/* =========================
+              ERROR
+          ========================= */}
           {error && (
-            <div className="mb-4 rounded-xl bg-red-50 border border-red-100 px-4 py-3">
+            <div
+              className="
+                mb-4
+                rounded-xl
+                bg-red-50
+                border
+                border-red-100
+                px-4
+                py-3
+              "
+            >
               <p className="text-sm text-red-600">
                 {error}
               </p>
             </div>
           )}
 
-          {/* ================= FORM ================= */}
-          <form onSubmit={handleLogin} className="space-y-4">
+          {/* =========================
+              FORM LOGIN
+          ========================= */}
+          <form
+            onSubmit={handleLogin}
+            className="space-y-4"
+          >
 
-            {/* USERNAME */}
+            {/* =========================
+                USERNAME
+            ========================= */}
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+                className="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  mb-1.5
+                "
               >
                 Username / NISN
               </label>
@@ -129,14 +290,23 @@ export default function LoginPage() {
 
                 <User
                   size={19}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="
+                    absolute
+                    left-3
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                  "
                 />
 
                 <input
                   id="username"
+                  name="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) =>
+                    setUsername(e.target.value)
+                  }
                   placeholder="Masukkan username atau NISN"
                   autoComplete="username"
                   disabled={loading}
@@ -159,17 +329,26 @@ export default function LoginPage() {
                     focus:ring-2
                     focus:ring-blue-100
                     disabled:opacity-60
+                    disabled:cursor-not-allowed
                   "
                 />
 
               </div>
             </div>
 
-            {/* PASSWORD */}
+            {/* =========================
+                PASSWORD
+            ========================= */}
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+                className="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  mb-1.5
+                "
               >
                 Password
               </label>
@@ -178,14 +357,27 @@ export default function LoginPage() {
 
                 <LockKeyhole
                   size={19}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="
+                    absolute
+                    left-3
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                  "
                 />
 
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  type={
+                    showPassword
+                      ? 'text'
+                      : 'password'
+                  }
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                   placeholder="Masukkan password"
                   autoComplete="current-password"
                   disabled={loading}
@@ -208,12 +400,15 @@ export default function LoginPage() {
                     focus:ring-2
                     focus:ring-blue-100
                     disabled:opacity-60
+                    disabled:cursor-not-allowed
                   "
                 />
 
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
                   disabled={loading}
                   className="
                     absolute
@@ -223,6 +418,7 @@ export default function LoginPage() {
                     text-gray-400
                     hover:text-gray-600
                     transition
+                    disabled:cursor-not-allowed
                   "
                   aria-label={
                     showPassword
@@ -240,25 +436,35 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* FORGOT PASSWORD */}
+            {/* =========================
+                LUPA PASSWORD
+            ========================= */}
             <div className="flex justify-end">
+
               <button
                 type="button"
+                disabled={loading}
                 className="
                   text-xs
                   font-medium
                   text-blue-600
                   hover:text-blue-700
+                  transition
+                  disabled:opacity-50
                 "
                 onClick={() => {
-                  // TODO: arahkan ke halaman lupa password
+                  // TODO:
+                  // Implementasi lupa password
                 }}
               >
                 Lupa password?
               </button>
+
             </div>
 
-            {/* LOGIN BUTTON */}
+            {/* =========================
+                LOGIN BUTTON
+            ========================= */}
             <button
               type="submit"
               disabled={loading}
@@ -282,49 +488,77 @@ export default function LoginPage() {
                 disabled:cursor-not-allowed
               "
             >
+
               {loading ? (
                 <>
-                  <div className="
-                    w-5
-                    h-5
-                    border-2
-                    border-white
-                    border-t-transparent
-                    rounded-full
-                    animate-spin
-                  " />
+                  <div
+                    className="
+                      w-5
+                      h-5
+                      border-2
+                      border-white
+                      border-t-transparent
+                      rounded-full
+                      animate-spin
+                    "
+                  />
 
-                  <span>Memproses...</span>
+                  <span>
+                    Memproses...
+                  </span>
                 </>
               ) : (
                 <>
                   <LogIn size={19} />
-                  <span>Masuk</span>
+
+                  <span>
+                    Masuk
+                  </span>
                 </>
               )}
+
             </button>
 
           </form>
 
-          {/* ================= DEMO INFO ================= */}
-          <div className="mt-5 rounded-xl bg-blue-50 border border-blue-100 p-3">
-            <p className="text-xs font-semibold text-blue-700">
-              Demo Login
+          {/* =========================
+              INFO LOGIN
+          ========================= */}
+          <div
+            className="
+              mt-5
+              rounded-xl
+              bg-blue-50
+              border
+              border-blue-100
+              p-3
+            "
+          >
+            <p className="
+              text-xs
+              font-semibold
+              text-blue-700
+            ">
+              Akses Wali Murid
             </p>
 
-            <p className="text-xs text-blue-600 mt-1">
-              Username: <b>wali</b>
-            </p>
-
-            <p className="text-xs text-blue-600">
-              Password: <b>123456</b>
+            <p className="
+              text-xs
+              text-blue-600
+              mt-1
+            ">
+              Gunakan username dan password
+              yang telah diberikan sekolah.
             </p>
           </div>
 
         </div>
 
-        {/* ================= FOOTER ================= */}
+        {/* =========================
+            FOOTER
+        ========================= */}
         <div className="text-center mt-5">
+
           <p className="text-xs text-gray-400">
             © 2026 SMAN 1 Kota Mungkid
           </p>
@@ -332,6 +566,7 @@ export default function LoginPage() {
           <p className="text-[10px] text-gray-400 mt-1">
             Sistem Informasi Siswa
           </p>
+
         </div>
 
       </div>
