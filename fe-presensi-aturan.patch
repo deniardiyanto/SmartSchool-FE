@@ -1,0 +1,135 @@
+diff --git a/src/pages/Attendance.jsx b/src/pages/Attendance.jsx
+index cbd06e0..7e9e148 100644
+--- a/src/pages/Attendance.jsx
++++ b/src/pages/Attendance.jsx
+@@ -3,7 +3,9 @@ import PageHeader from '../components/common/PageHeader';
+ import Pagination from '../components/common/Pagination';
+ import ErrorState from '../components/common/ErrorState';
+ import useApi from '../hooks/useApi';
+-import { getAttendances } from '../services/attendanceService';
++import Modal from '../components/common/Modal';
++import { getAttendances, closeDay } from '../services/attendanceService';
++import { getErrorMessage } from '../services/api';
+ import { formatTime } from '../utils/format';
+ 
+ const PAGE_SIZE = 10;
+@@ -30,6 +32,32 @@ export default function Attendance() {
+   );
+   const items = attendances.data?.items ?? [];
+ 
++  const [confirmClose, setConfirmClose] = useState(false);
++  const [closing, setClosing] = useState(false);
++  const [closeResult, setCloseResult] = useState(null); // { ok, text }
++
++  // Tanggal yang ditutup: filter tanggal, atau hari ini bila filter kosong.
++  const closeDate = date || todayUtc();
++
++  async function runCloseDay() {
++    setClosing(true);
++    try {
++      const res = await closeDay(closeDate);
++      setCloseResult({
++        ok: true,
++        text: res.markedAbsent > 0
++          ? `${res.markedAbsent} siswa ditandai alpa (poin ${res.absentPoint} per siswa). ${res.alreadyRecorded} siswa sudah punya presensi.`
++          : `Tidak ada siswa yang perlu ditandai alpa. ${res.alreadyRecorded} dari ${res.totalActiveStudents} siswa sudah punya presensi.`,
++      });
++      attendances.reload();
++    } catch (err) {
++      setCloseResult({ ok: false, text: getErrorMessage(err) });
++    } finally {
++      setClosing(false);
++      setConfirmClose(false);
++    }
++  }
++
+   return (
+     <div>
+       <PageHeader title="Presensi" subtitle="Riwayat kehadiran siswa per tanggal">
+@@ -44,8 +72,40 @@ export default function Attendance() {
+             Semua tanggal
+           </button>
+         )}
++        <button
++          onClick={() => { setCloseResult(null); setConfirmClose(true); }}
++          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
++        >
++          Tutup Hari
++        </button>
+       </PageHeader>
+ 
++      {closeResult && (
++        <div className={`mb-4 text-sm rounded-lg px-4 py-3 border ${closeResult.ok ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
++          {closeResult.text}
++        </div>
++      )}
++
++      {confirmClose && (
++        <Modal
++          title="Tutup Hari"
++          onClose={() => setConfirmClose(false)}
++          footer={
++            <>
++              <button onClick={() => setConfirmClose(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
++              <button onClick={runCloseDay} disabled={closing} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
++                {closing ? 'Memproses...' : 'Tutup Hari'}
++              </button>
++            </>
++          }
++        >
++          <p className="text-sm text-gray-600">
++            Semua siswa aktif yang belum punya presensi pada <b>{closeDate}</b> akan ditandai <b>Alpa</b>
++            dan mendapat poin alpa sesuai Pengaturan. Proses ini aman diulang; siswa yang sudah punya presensi dilewati.
++          </p>
++        </Modal>
++      )}
++
+       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+         {attendances.error && <div className="mb-4"><ErrorState message={attendances.error} onRetry={attendances.reload} /></div>}
+ 
+diff --git a/src/pages/Settings.jsx b/src/pages/Settings.jsx
+index 0b9c923..6773eb8 100644
+--- a/src/pages/Settings.jsx
++++ b/src/pages/Settings.jsx
+@@ -149,7 +149,7 @@ function AttendanceRuleCard({ rule }) {
+           <div className="hidden lg:block" />
+           {timeField('checkOutStart', 'Mulai Pulang (WIB)')}
+           {timeField('checkOutEnd', 'Batas Pulang (WIB)')}
+-          <Field label="Toleransi Terlambat (menit)" hint="Belum dipakai scanner">
++          <Field label="Toleransi Terlambat (menit)" hint="Tepat waktu sampai Batas + toleransi">
+             <input type="number" min={0} max={180} className={inputCls} value={form.lateToleranceMinutes} onChange={set('lateToleranceMinutes')} />
+           </Field>
+           <Field label="Poin Hadir Tepat Waktu">
+@@ -158,17 +158,16 @@ function AttendanceRuleCard({ rule }) {
+           <Field label="Poin Terlambat">
+             <input type="number" className={inputCls} value={form.latePoint} onChange={set('latePoint')} />
+           </Field>
+-          <Field label="Poin Alpa" hint="Belum dipakai scanner">
++          <Field label="Poin Alpa" hint="Dipakai oleh Tutup Hari (halaman Presensi)">
+             <input type="number" className={inputCls} value={form.absentPoint} onChange={set('absentPoint')} />
+           </Field>
+-          <Field label="Poin Pulang Cepat" hint="Belum dipakai scanner">
++          <Field label="Poin Pulang Cepat" hint="Belum dipakai: scan pulang sebelum jam pulang ditolak">
+             <input type="number" className={inputCls} value={form.earlyCheckoutPoint} onChange={set('earlyCheckoutPoint')} />
+           </Field>
+         </div>
+         <p className="text-xs text-gray-400 mt-4">
+-          Poin adalah poin pelanggaran (semakin besar semakin buruk). Saat ini scanner hanya memakai Batas Tepat Waktu,
+-          Poin Hadir, dan Poin Terlambat; kolom lain disimpan untuk pemakaian berikutnya.
+-          Perubahan berlaku untuk scan berikutnya, data yang sudah tercatat tidak berubah.
++          Poin adalah poin pelanggaran (semakin besar semakin buruk). Scan sebelum Mulai Masuk atau sebelum Mulai Pulang
++          ditolak. Perubahan berlaku untuk scan berikutnya, data yang sudah tercatat tidak berubah.
+         </p>
+         <SaveBar saving={saving} message={message} error={error} />
+       </form>
+diff --git a/src/services/attendanceService.js b/src/services/attendanceService.js
+index f9996cd..df4c5ab 100644
+--- a/src/services/attendanceService.js
++++ b/src/services/attendanceService.js
+@@ -2,3 +2,6 @@ import api, { unwrap } from './api';
+ 
+ export const getAttendances = (params, signal) =>
+   api.get('/attendance', { params, signal }).then(unwrap);
++
++export const closeDay = (date) =>
++  api.post('/attendance/close-day', { date: date || null }).then(unwrap);

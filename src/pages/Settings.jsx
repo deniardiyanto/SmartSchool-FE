@@ -149,7 +149,7 @@ function AttendanceRuleCard({ rule }) {
           <div className="hidden lg:block" />
           {timeField('checkOutStart', 'Mulai Pulang (WIB)')}
           {timeField('checkOutEnd', 'Batas Pulang (WIB)')}
-          <Field label="Toleransi Terlambat (menit)" hint="Belum dipakai scanner">
+          <Field label="Toleransi Terlambat (menit)" hint="Tepat waktu sampai Batas + toleransi">
             <input type="number" min={0} max={180} className={inputCls} value={form.lateToleranceMinutes} onChange={set('lateToleranceMinutes')} />
           </Field>
           <Field label="Poin Hadir Tepat Waktu">
@@ -158,17 +158,16 @@ function AttendanceRuleCard({ rule }) {
           <Field label="Poin Terlambat">
             <input type="number" className={inputCls} value={form.latePoint} onChange={set('latePoint')} />
           </Field>
-          <Field label="Poin Alpa" hint="Belum dipakai scanner">
+          <Field label="Poin Alpa" hint="Dipakai oleh Tutup Hari (halaman Presensi)">
             <input type="number" className={inputCls} value={form.absentPoint} onChange={set('absentPoint')} />
           </Field>
-          <Field label="Poin Pulang Cepat" hint="Belum dipakai scanner">
+          <Field label="Poin Pulang Cepat" hint="Belum dipakai: scan pulang sebelum jam pulang ditolak">
             <input type="number" className={inputCls} value={form.earlyCheckoutPoint} onChange={set('earlyCheckoutPoint')} />
           </Field>
         </div>
         <p className="text-xs text-gray-400 mt-4">
-          Poin adalah poin pelanggaran (semakin besar semakin buruk). Saat ini scanner hanya memakai Batas Tepat Waktu,
-          Poin Hadir, dan Poin Terlambat; kolom lain disimpan untuk pemakaian berikutnya.
-          Perubahan berlaku untuk scan berikutnya, data yang sudah tercatat tidak berubah.
+          Poin adalah poin pelanggaran (semakin besar semakin buruk). Scan sebelum Mulai Masuk atau sebelum Mulai Pulang
+          ditolak. Perubahan berlaku untuk scan berikutnya, data yang sudah tercatat tidak berubah.
         </p>
         <SaveBar saving={saving} message={message} error={error} />
       </form>

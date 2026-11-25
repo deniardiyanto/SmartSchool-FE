@@ -3,7 +3,9 @@ import PageHeader from '../components/common/PageHeader';
 import Pagination from '../components/common/Pagination';
 import ErrorState from '../components/common/ErrorState';
 import useApi from '../hooks/useApi';
-import { getAttendances } from '../services/attendanceService';
+import Modal from '../components/common/Modal';
+import { getAttendances, closeDay } from '../services/attendanceService';
+import { getErrorMessage } from '../services/api';
 import { formatTime } from '../utils/format';
 
 const PAGE_SIZE = 10;
@@ -30,6 +32,32 @@ export default function Attendance() {
   );
   const items = attendances.data?.items ?? [];
 
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [closeResult, setCloseResult] = useState(null); // { ok, text }
+
+  // Tanggal yang ditutup: filter tanggal, atau hari ini bila filter kosong.
+  const closeDate = date || todayUtc();
+
+  async function runCloseDay() {
+    setClosing(true);
+    try {
+      const res = await closeDay(closeDate);
+      setCloseResult({
+        ok: true,
+        text: res.markedAbsent > 0
+          ? `${res.markedAbsent} siswa ditandai alpa (poin ${res.absentPoint} per siswa). ${res.alreadyRecorded} siswa sudah punya presensi.`
+          : `Tidak ada siswa yang perlu ditandai alpa. ${res.alreadyRecorded} dari ${res.totalActiveStudents} siswa sudah punya presensi.`,
+      });
+      attendances.reload();
+    } catch (err) {
+      setCloseResult({ ok: false, text: getErrorMessage(err) });
+    } finally {
+      setClosing(false);
+      setConfirmClose(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader title="Presensi" subtitle="Riwayat kehadiran siswa per tanggal">
@@ -44,7 +72,39 @@ export default function Attendance() {
             Semua tanggal
           </button>
         )}
+        <button
+          onClick={() => { setCloseResult(null); setConfirmClose(true); }}
+          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Tutup Hari
+        </button>
       </PageHeader>
+
+      {closeResult && (
+        <div className={`mb-4 text-sm rounded-lg px-4 py-3 border ${closeResult.ok ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+          {closeResult.text}
+        </div>
+      )}
+
+      {confirmClose && (
+        <Modal
+          title="Tutup Hari"
+          onClose={() => setConfirmClose(false)}
+          footer={
+            <>
+              <button onClick={() => setConfirmClose(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
+              <button onClick={runCloseDay} disabled={closing} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+                {closing ? 'Memproses...' : 'Tutup Hari'}
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm text-gray-600">
+            Semua siswa aktif yang belum punya presensi pada <b>{closeDate}</b> akan ditandai <b>Alpa</b>
+            dan mendapat poin alpa sesuai Pengaturan. Proses ini aman diulang; siswa yang sudah punya presensi dilewati.
+          </p>
+        </Modal>
+      )}
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         {attendances.error && <div className="mb-4"><ErrorState message={attendances.error} onRetry={attendances.reload} /></div>}
