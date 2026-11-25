@@ -1,0 +1,250 @@
+import { useState } from 'react';
+import PageHeader from '../components/common/PageHeader';
+import ErrorState from '../components/common/ErrorState';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import useApi from '../hooks/useApi';
+import { getErrorMessage } from '../services/api';
+import {
+  getAttendanceRule,
+  saveAttendanceRule,
+  getMonitoringSetting,
+  saveMonitoringSetting,
+} from '../services/settingsService';
+
+const inputCls =
+  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+// Jam presensi diisi dan dibaca scanner dalam WIB.
+const toInput = (t) => (t ? String(t).slice(0, 5) : '');
+const toApi = (t) => (t ? `${t}:00` : null);
+
+const defaultRule = {
+  ruleName: 'Default',
+  checkInStart: '',
+  checkInEnd: '',
+  checkOutStart: '',
+  checkOutEnd: '',
+  lateToleranceMinutes: 0,
+  presentPoint: 0,
+  latePoint: 5,
+  absentPoint: 0,
+  earlyCheckoutPoint: 0,
+};
+
+function Card({ title, description, children }) {
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+      <h3 className="font-semibold text-gray-800">{title}</h3>
+      {description && <p className="text-sm text-gray-500 mt-1 mb-4">{description}</p>}
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, hint, children }) {
+  return (
+    <label className="block">
+      <span className="block text-xs font-medium text-gray-600 mb-1">{label}</span>
+      {children}
+      {hint && <span className="block text-xs text-gray-400 mt-1">{hint}</span>}
+    </label>
+  );
+}
+
+function SaveBar({ saving, message, error }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 mt-5">
+      <button
+        disabled={saving}
+        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+      >
+        {saving ? 'Menyimpan...' : 'Simpan'}
+      </button>
+      {message && <span className="text-sm text-green-600">{message}</span>}
+      {error && <span className="text-sm text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+const formFromRule = (rule) =>
+  rule
+    ? {
+        ruleName: rule.ruleName,
+        checkInStart: toInput(rule.checkInStart),
+        checkInEnd: toInput(rule.checkInEnd),
+        checkOutStart: toInput(rule.checkOutStart),
+        checkOutEnd: toInput(rule.checkOutEnd),
+        lateToleranceMinutes: rule.lateToleranceMinutes,
+        presentPoint: rule.presentPoint,
+        latePoint: rule.latePoint,
+        absentPoint: rule.absentPoint,
+        earlyCheckoutPoint: rule.earlyCheckoutPoint,
+      }
+    : defaultRule;
+
+// Dipasang setelah data selesai dimuat, jadi state awal cukup dari props.
+function AttendanceRuleCard({ rule }) {
+  const [form, setForm] = useState(() => formFromRule(rule));
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  const set = (key) => (e) => {
+    setMessage(null);
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+  };
+
+  async function submit(e) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+    try {
+      await saveAttendanceRule({
+        ruleName: form.ruleName.trim(),
+        checkInStart: toApi(form.checkInStart),
+        checkInEnd: toApi(form.checkInEnd),
+        checkOutStart: toApi(form.checkOutStart),
+        checkOutEnd: toApi(form.checkOutEnd),
+        lateToleranceMinutes: Number(form.lateToleranceMinutes),
+        presentPoint: Number(form.presentPoint),
+        latePoint: Number(form.latePoint),
+        absentPoint: Number(form.absentPoint),
+        earlyCheckoutPoint: Number(form.earlyCheckoutPoint),
+      });
+      setMessage('Aturan presensi disimpan.');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const timeField = (key, label) => (
+    <Field label={label}>
+      <input required type="time" className={inputCls} value={form[key]} onChange={set(key)} />
+    </Field>
+  );
+
+  return (
+    <Card
+      title="Aturan Presensi"
+      description="Semua jam diisi dalam WIB. Scan setelah Batas Tepat Waktu dihitung terlambat."
+    >
+      {!rule && (
+        <div className="mb-4 text-sm text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg px-4 py-3">
+          Aturan presensi belum dikonfigurasi. Scan barcode akan gagal sampai aturan ini disimpan.
+        </div>
+      )}
+
+      <form onSubmit={submit}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Nama Aturan">
+              <input required maxLength={100} className={inputCls} value={form.ruleName} onChange={set('ruleName')} />
+            </Field>
+          </div>
+          {timeField('checkInStart', 'Mulai Masuk (WIB)')}
+          {timeField('checkInEnd', 'Batas Tepat Waktu (WIB)')}
+          <div className="hidden lg:block" />
+          {timeField('checkOutStart', 'Mulai Pulang (WIB)')}
+          {timeField('checkOutEnd', 'Batas Pulang (WIB)')}
+          <Field label="Toleransi Terlambat (menit)" hint="Belum dipakai scanner">
+            <input type="number" min={0} max={180} className={inputCls} value={form.lateToleranceMinutes} onChange={set('lateToleranceMinutes')} />
+          </Field>
+          <Field label="Poin Hadir Tepat Waktu">
+            <input type="number" className={inputCls} value={form.presentPoint} onChange={set('presentPoint')} />
+          </Field>
+          <Field label="Poin Terlambat">
+            <input type="number" className={inputCls} value={form.latePoint} onChange={set('latePoint')} />
+          </Field>
+          <Field label="Poin Alpa" hint="Belum dipakai scanner">
+            <input type="number" className={inputCls} value={form.absentPoint} onChange={set('absentPoint')} />
+          </Field>
+          <Field label="Poin Pulang Cepat" hint="Belum dipakai scanner">
+            <input type="number" className={inputCls} value={form.earlyCheckoutPoint} onChange={set('earlyCheckoutPoint')} />
+          </Field>
+        </div>
+        <p className="text-xs text-gray-400 mt-4">
+          Poin adalah poin pelanggaran (semakin besar semakin buruk). Saat ini scanner hanya memakai Batas Tepat Waktu,
+          Poin Hadir, dan Poin Terlambat; kolom lain disimpan untuk pemakaian berikutnya.
+          Perubahan berlaku untuk scan berikutnya, data yang sudah tercatat tidak berubah.
+        </p>
+        <SaveBar saving={saving} message={message} error={error} />
+      </form>
+    </Card>
+  );
+}
+
+function MonitoringCard({ setting }) {
+  const [warning, setWarning] = useState(setting?.warningPoint ?? '');
+  const [coaching, setCoaching] = useState(setting?.coachingPoint ?? '');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function submit(e) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+    try {
+      await saveMonitoringSetting({ warningPoint: Number(warning), coachingPoint: Number(coaching) });
+      setMessage('Ambang status disimpan.');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card
+      title="Ambang Status Siswa"
+      description="Status di Monitoring Peserta Didik ditentukan dari total poin pelanggaran siswa."
+    >
+      <form onSubmit={submit}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+          <Field label="Peringatan jika poin ≥" hint={setting?.isDefault ? 'Nilai bawaan' : undefined}>
+            <input required type="number" min={1} className={inputCls} value={warning} onChange={(e) => { setMessage(null); setWarning(e.target.value); }} />
+          </Field>
+          <Field label="Pembinaan jika poin ≥" hint={setting?.isDefault ? 'Nilai bawaan' : undefined}>
+            <input required type="number" min={2} className={inputCls} value={coaching} onChange={(e) => { setMessage(null); setCoaching(e.target.value); }} />
+          </Field>
+        </div>
+        <SaveBar saving={saving} message={message} error={error} />
+      </form>
+    </Card>
+  );
+}
+
+export default function Settings() {
+  const rule = useApi((signal) => getAttendanceRule(signal), []);
+  const monitoring = useApi((signal) => getMonitoringSetting(signal), []);
+
+  const loading = rule.loading || monitoring.loading;
+  const error = rule.error || monitoring.error;
+
+  return (
+    <div>
+      <PageHeader title="Pengaturan" subtitle="Aturan presensi dan ambang status peserta didik" />
+
+      {error && (
+        <div className="mb-6">
+          <ErrorState message={error} onRetry={() => { rule.reload(); monitoring.reload(); }} />
+        </div>
+      )}
+
+      {loading && !error ? (
+        <LoadingSpinner />
+      ) : (
+        !error && (
+          <>
+            <AttendanceRuleCard rule={rule.data} />
+            <MonitoringCard setting={monitoring.data} />
+          </>
+        )
+      )}
+    </div>
+  );
+}

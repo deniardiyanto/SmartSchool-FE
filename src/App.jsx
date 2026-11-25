@@ -9,6 +9,7 @@ import WaliLogin from './pages/WaliLogin';
 import Students from './pages/Students';
 import Attendance from './pages/Attendance';
 import Violations from './pages/Violations';
+import Settings from './pages/Settings';
 import { ChevronLeft } from 'lucide-react';
 
 // Placeholder untuk halaman lain
@@ -18,7 +19,7 @@ import { ChevronLeft } from 'lucide-react';
 const Kaih = () => <div className="p-4 text-gray-500">Halaman KAIH (coming soon)</div>;
 const Announcements = () => <div className="p-4 text-gray-500">Halaman Pengumuman (coming soon)</div>;
 const Reports = () => <div className="p-4 text-gray-500">Halaman Laporan (coming soon)</div>;
-const Settings = () => <div className="p-4 text-gray-500">Halaman Pengaturan (coming soon)</div>;
+// const Settings = () => <div className="p-4 text-gray-500">Halaman Pengaturan (coming soon)</div>;
 const Help = () => <div className="p-4 text-gray-500">Halaman Bantuan (coming soon)</div>;
 
 // Placeholder untuk KAIH dan Profil Wali

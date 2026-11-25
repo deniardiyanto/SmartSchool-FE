@@ -1,0 +1,61 @@
+diff --git a/src/pages/Settings.jsx b/src/pages/Settings.jsx
+index a294435..0b9c923 100644
+--- a/src/pages/Settings.jsx
++++ b/src/pages/Settings.jsx
+@@ -14,19 +14,10 @@ import {
+ const inputCls =
+   'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+ 
+-// BE menyimpan dan membandingkan jam presensi dalam UTC (WIB = UTC+7).
+-const WIB_OFFSET_HOURS = 7;
+-
++// Jam presensi diisi dan dibaca scanner dalam WIB.
+ const toInput = (t) => (t ? String(t).slice(0, 5) : '');
+ const toApi = (t) => (t ? `${t}:00` : null);
+ 
+-function toWib(utc) {
+-  if (!utc || !/^\d{2}:\d{2}$/.test(utc)) return '';
+-  const [h, m] = utc.split(':').map(Number);
+-  const wibHour = (h + WIB_OFFSET_HOURS) % 24;
+-  return `${String(wibHour).padStart(2, '0')}:${String(m).padStart(2, '0')} WIB`;
+-}
+-
+ const defaultRule = {
+   ruleName: 'Default',
+   checkInStart: '',
+@@ -129,8 +120,8 @@ function AttendanceRuleCard({ rule }) {
+     }
+   }
+ 
+-  const timeField = (key, label, hint) => (
+-    <Field label={label} hint={hint ?? (form[key] ? `= ${toWib(form[key])}` : undefined)}>
++  const timeField = (key, label) => (
++    <Field label={label}>
+       <input required type="time" className={inputCls} value={form[key]} onChange={set(key)} />
+     </Field>
+   );
+@@ -138,7 +129,7 @@ function AttendanceRuleCard({ rule }) {
+   return (
+     <Card
+       title="Aturan Presensi"
+-      description="Jam diisi dalam UTC, sesuai cara scanner membaca waktu (WIB = UTC+7). Contoh: 07:00 WIB diisi 00:00. Perkiraan WIB tampil di bawah tiap kolom."
++      description="Semua jam diisi dalam WIB. Scan setelah Batas Tepat Waktu dihitung terlambat."
+     >
+       {!rule && (
+         <div className="mb-4 text-sm text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg px-4 py-3">
+@@ -153,11 +144,11 @@ function AttendanceRuleCard({ rule }) {
+               <input required maxLength={100} className={inputCls} value={form.ruleName} onChange={set('ruleName')} />
+             </Field>
+           </div>
+-          {timeField('checkInStart', 'Mulai Masuk (UTC)')}
+-          {timeField('checkInEnd', 'Batas Tepat Waktu (UTC)')}
++          {timeField('checkInStart', 'Mulai Masuk (WIB)')}
++          {timeField('checkInEnd', 'Batas Tepat Waktu (WIB)')}
+           <div className="hidden lg:block" />
+-          {timeField('checkOutStart', 'Mulai Pulang (UTC)')}
+-          {timeField('checkOutEnd', 'Batas Pulang (UTC)')}
++          {timeField('checkOutStart', 'Mulai Pulang (WIB)')}
++          {timeField('checkOutEnd', 'Batas Pulang (WIB)')}
+           <Field label="Toleransi Terlambat (menit)" hint="Belum dipakai scanner">
+             <input type="number" min={0} max={180} className={inputCls} value={form.lateToleranceMinutes} onChange={set('lateToleranceMinutes')} />
+           </Field>
