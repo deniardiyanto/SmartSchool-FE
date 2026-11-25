@@ -1,6 +1,7 @@
-export default function StatCard({ title, value, subtitle, change, icon: Icon, color }) {
-  const isPositive = change?.includes('+');
-  const isNegative = change?.includes('-');
+// trend: 'good' | 'bad' | 'neutral' (opsional). Tanpa trend, warna ditentukan dari tanda +/-.
+export default function StatCard({ title, value, subtitle, change, trend, icon: Icon, color }) {
+  const isPositive = trend ? trend === 'good' : change?.includes('+');
+  const isNegative = trend ? trend === 'bad' : change?.includes('-');
   
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100">

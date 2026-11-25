@@ -6,12 +6,15 @@ import WaliDashboard from './pages/WaliDashboard';
 import WaliPresensi from './pages/WaliPresensi';
 import WaliPoin from './pages/WaliPoin';
 import WaliLogin from './pages/WaliLogin';
+import Students from './pages/Students';
+import Attendance from './pages/Attendance';
+import Violations from './pages/Violations';
 import { ChevronLeft } from 'lucide-react';
 
 // Placeholder untuk halaman lain
-const Students = () => <div className="p-4 text-gray-500">Halaman Data Siswa (coming soon)</div>;
-const Attendance = () => <div className="p-4 text-gray-500">Halaman Presensi (coming soon)</div>;
-const Violations = () => <div className="p-4 text-gray-500">Halaman Poin Pelanggaran (coming soon)</div>;
+// const Students = () => <div className="p-4 text-gray-500">Halaman Data Siswa (coming soon)</div>;
+// const Attendance = () => <div className="p-4 text-gray-500">Halaman Presensi (coming soon)</div>;
+// const Violations = () => <div className="p-4 text-gray-500">Halaman Poin Pelanggaran (coming soon)</div>;
 const Kaih = () => <div className="p-4 text-gray-500">Halaman KAIH (coming soon)</div>;
 const Announcements = () => <div className="p-4 text-gray-500">Halaman Pengumuman (coming soon)</div>;
 const Reports = () => <div className="p-4 text-gray-500">Halaman Laporan (coming soon)</div>;
