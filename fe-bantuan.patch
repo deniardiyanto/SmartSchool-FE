@@ -1,0 +1,241 @@
+diff --git a/src/data/helpContent.js b/src/data/helpContent.js
+new file mode 100644
+index 0000000..54392f3
+--- /dev/null
++++ b/src/data/helpContent.js
+@@ -0,0 +1,138 @@
++// Isi halaman Bantuan. Ubah teks di sini tanpa menyentuh tampilan.
++// Hanya fitur yang sudah ada di aplikasi yang boleh dituliskan.
++
++export const CONTACT = {
++  name: 'Deni',
++  handle: '@ruang_nalar',
++};
++
++export const ROLE_GUIDES = [
++  {
++    icon: '🛠️',
++    title: 'Admin Sekolah',
++    steps: [
++      'Buka Pengaturan dan isi Aturan Presensi (jam masuk dan pulang dalam WIB, toleransi, poin). Scan barcode tidak bisa dipakai sebelum aturan ini disimpan.',
++      'Tambahkan siswa di Data Siswa. Kelas dan wali murid harus sudah ada sebelumnya.',
++      'Pantau Dashboard: statistik hari ini, rekap presensi, kelas terbaik, dan monitoring peserta didik.',
++      'Lihat riwayat kehadiran per tanggal di menu Presensi.',
++      'Setelah jam pulang, klik Tutup Hari di menu Presensi supaya siswa yang tidak scan ditandai Alpa.',
++      'Unduh rekap bulanan di menu Laporan dalam bentuk Excel.',
++    ],
++  },
++  {
++    icon: '📷',
++    title: 'Petugas Scan',
++    steps: [
++      'Scan barcode kartu siswa saat datang. Status Hadir atau Terlambat ditentukan otomatis dari jam scan.',
++      'Scan kartu yang sama lagi setelah jam pulang dibuka untuk mencatat jam pulang.',
++      'Jika muncul pesan penolakan, baca arti pesannya di bagian Presensi pada FAQ di bawah.',
++    ],
++    note: 'Halaman Petugas Scan masih dalam pengembangan.',
++  },
++  {
++    icon: '👨‍👩‍👧',
++    title: 'Wali Murid',
++    steps: [
++      'Masuk lewat halaman login wali.',
++      'Menu Presensi menampilkan kehadiran anak, dan menu Poin menampilkan poin pelanggarannya.',
++      'Menu KAIH dan Profil akan tersedia setelah dikembangkan.',
++    ],
++    note: 'Halaman Wali Murid masih dalam pengembangan, sehingga tampilannya dapat berubah.',
++  },
++];
++
++export const FAQ_GROUPS = [
++  {
++    title: 'Presensi',
++    items: [
++      {
++        q: 'Kapan siswa dihitung Hadir atau Terlambat?',
++        a: 'Siswa Hadir jika scan masuk dilakukan sampai Batas Tepat Waktu ditambah Toleransi Terlambat. Setelah itu siswa dihitung Terlambat. Semua jam memakai WIB dan diatur di Pengaturan, bagian Aturan Presensi.',
++      },
++      {
++        q: 'Kenapa muncul pesan "Belum waktunya presensi"?',
++        a: 'Scan dilakukan sebelum jam Mulai Masuk. Scan baru diterima setelah jam tersebut tiba.',
++      },
++      {
++        q: 'Kenapa muncul pesan "Belum waktunya pulang"?',
++        a: 'Scan kedua (pulang) dilakukan sebelum jam Mulai Pulang. Scan pulang baru diterima setelah jam tersebut tiba.',
++      },
++      {
++        q: 'Apa arti "Attendance hari ini sudah selesai"?',
++        a: 'Siswa sudah tercatat masuk dan pulang pada hari itu, sehingga scan berikutnya ditolak.',
++      },
++      {
++        q: 'Apa arti "Siswa sudah ditandai alpa hari ini"?',
++        a: 'Hari tersebut sudah ditutup lewat Tutup Hari dan siswa belum scan sebelumnya, sehingga tercatat Alpa. Scan sesudahnya ditolak. Hubungi admin untuk mengoreksi presensi.',
++      },
++      {
++        q: 'Apa arti pesan "Barcode tidak ditemukan", "tidak aktif", atau "expired"?',
++        a: 'Barcode belum terdaftar, sudah dinonaktifkan, atau sudah melewati tanggal kedaluwarsa. Hubungi admin untuk memeriksa data kartu siswa.',
++      },
++      {
++        q: 'Apa itu Tutup Hari?',
++        a: 'Tombol di menu Presensi yang menandai Alpa semua siswa aktif yang belum punya presensi pada tanggal terpilih, lengkap dengan poin Alpa dari Pengaturan. Aman diulang karena siswa yang sudah punya presensi dilewati.',
++      },
++      {
++        q: 'Kenapa Tutup Hari ditolak?',
++        a: 'Ada tiga kemungkinan: hari ini belum melewati jam Mulai Pulang, tanggalnya belum punya satu pun presensi (dianggap bukan hari efektif), atau tanggalnya di masa depan.',
++      },
++    ],
++  },
++  {
++    title: 'Poin dan status siswa',
++    items: [
++      {
++        q: 'Apa arti poin pelanggaran?',
++        a: 'Semakin besar poin, semakin banyak pelanggaran. Poin bertambah, misalnya saat siswa terlambat, sesuai nilai di Aturan Presensi. Koreksi bernilai negatif mengurangi total, dan total tidak pernah di bawah 0.',
++      },
++      {
++        q: 'Apa arti status Aktif, Peringatan, dan Pembinaan?',
++        a: 'Status ditentukan dari total poin pelanggaran siswa. Di bawah batas Peringatan berstatus Aktif, mulai batas Peringatan berstatus Peringatan, dan mulai batas Pembinaan berstatus Pembinaan. Jika belum diubah, batasnya 15 dan 25. Batas ini dapat diatur di Pengaturan, bagian Ambang Status Siswa.',
++      },
++      {
++        q: 'Bagaimana persentase presensi di Dashboard dihitung?',
++        a: 'Jumlah hari Hadir ditambah Terlambat dalam bulan berjalan, dibagi hari efektif. Hari efektif adalah tanggal yang punya data presensi.',
++      },
++      {
++        q: 'Apa arti "Belum tercatat" pada Rekap Presensi?',
++        a: 'Jumlah siswa aktif yang belum punya data presensi hari itu.',
++      },
++    ],
++  },
++  {
++    title: 'KAIH',
++    items: [
++      {
++        q: 'Apa itu KAIH?',
++        a: '7 Kebiasaan Anak Indonesia Hebat: bangun pagi, beribadah, berolahraga, makan sehat, belajar, bermasyarakat, dan tidur cepat.',
++      },
++      {
++        q: 'Kenapa angka KAIH masih 0%?',
++        a: 'Fitur pengisian KAIH belum tersedia di aplikasi, jadi belum ada data yang bisa dihitung.',
++      },
++    ],
++  },
++  {
++    title: 'Laporan',
++    items: [
++      {
++        q: 'Bagaimana mengunduh laporan ke Excel?',
++        a: 'Buka menu Laporan, pilih tab (Presensi, Poin Pelanggaran, atau KAIH), atur periode dan kelas, lalu klik Ekspor Excel. Semua baris pada filter itu ikut diunduh, bukan hanya halaman yang tampil. Tombol CSV tersedia untuk format teks.',
++      },
++      {
++        q: 'Kenapa laporan Poin Pelanggaran tidak memuat semua siswa?',
++        a: 'Laporan ini hanya menampilkan siswa yang punya poin pelanggaran lebih dari 0 pada periode terpilih.',
++      },
++    ],
++  },
++  {
++    title: 'Data siswa',
++    items: [
++      {
++        q: 'Kenapa saya tidak bisa menambah siswa?',
++        a: 'Form membutuhkan kelas dan wali murid. Pastikan keduanya sudah terdaftar, lalu isi semua kolom yang wajib.',
++      },
++    ],
++  },
++];
+diff --git a/src/pages/Help.jsx b/src/pages/Help.jsx
+new file mode 100644
+index 0000000..ef123b0
+--- /dev/null
++++ b/src/pages/Help.jsx
+@@ -0,0 +1,91 @@
++import { useMemo, useState } from 'react';
++import { Search, ChevronDown } from 'lucide-react';
++import PageHeader from '../components/common/PageHeader';
++import { ROLE_GUIDES, FAQ_GROUPS, CONTACT } from '../data/helpContent';
++import pkg from '../../package.json';
++
++export default function Help() {
++  const [query, setQuery] = useState('');
++
++  const groups = useMemo(() => {
++    const q = query.trim().toLowerCase();
++    if (!q) return FAQ_GROUPS;
++    return FAQ_GROUPS.map((g) => ({
++      ...g,
++      items: g.items.filter((i) => `${i.q} ${i.a}`.toLowerCase().includes(q)),
++    })).filter((g) => g.items.length > 0);
++  }, [query]);
++
++  return (
++    <div>
++      <PageHeader title="Bantuan" subtitle="Panduan singkat dan pertanyaan yang sering diajukan">
++        <div className="relative">
++          <input
++            type="text"
++            value={query}
++            onChange={(e) => setQuery(e.target.value)}
++            placeholder="Cari pertanyaan..."
++            className="w-64 px-4 py-2 pl-10 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
++          />
++          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
++        </div>
++      </PageHeader>
++
++      {!query.trim() && (
++        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
++          {ROLE_GUIDES.map((role) => (
++            <div key={role.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
++              <h3 className="font-semibold text-gray-800 mb-3">
++                <span className="mr-2" aria-hidden="true">{role.icon}</span>
++                {role.title}
++              </h3>
++              <ol className="list-decimal list-outside pl-5 space-y-2 text-sm text-gray-600">
++                {role.steps.map((s) => (
++                  <li key={s}>{s}</li>
++                ))}
++              </ol>
++              {role.note && (
++                <p className="mt-4 text-xs text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg px-3 py-2">
++                  {role.note}
++                </p>
++              )}
++            </div>
++          ))}
++        </div>
++      )}
++
++      {groups.length === 0 && (
++        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center text-sm text-gray-400">
++          Tidak ada pertanyaan yang cocok dengan &quot;{query}&quot;.
++        </div>
++      )}
++
++      {groups.map((g) => (
++        <section key={g.title} className="mb-6">
++          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{g.title}</h2>
++          <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
++            {g.items.map((item) => (
++              <details key={item.q} className="group px-6 py-4" open={Boolean(query.trim())}>
++                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-sm font-medium text-gray-800">
++                  {item.q}
++                  <ChevronDown size={16} className="flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180" />
++                </summary>
++                <p className="mt-3 text-sm text-gray-600 leading-relaxed">{item.a}</p>
++              </details>
++            ))}
++          </div>
++        </section>
++      ))}
++
++      <div className="mt-8 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-wrap items-center justify-between gap-3">
++        <div>
++          <p className="text-sm font-semibold text-gray-800">Masih butuh bantuan?</p>
++          <p className="text-sm text-gray-500 mt-1">
++            Hubungi {CONTACT.name} ({CONTACT.handle})
++          </p>
++        </div>
++        <p className="text-xs text-gray-400">Versi aplikasi {pkg.version}</p>
++      </div>
++    </div>
++  );
++}

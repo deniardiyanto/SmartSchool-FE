@@ -12,7 +12,7 @@ const adminMenuItems = [
   { icon: CalendarCheck, label: 'Presensi', path: '/admin/attendance' },
   { icon: AlertTriangle, label: 'Poin Pelanggaran', path: '/admin/violations' },
   { icon: FileText, label: 'KAIH', path: '/admin/kaih' },
-  { icon: Megaphone, label: 'Pengumuman', path: '/admin/announcements' },
+  // { icon: Megaphone, label: 'Pengumuman', path: '/admin/announcements' },
   { icon: FileBarChart, label: 'Laporan', path: '/admin/reports' },
   { icon: Settings, label: 'Pengaturan', path: '/admin/settings' },
   { icon: HelpCircle, label: 'Bantuan', path: '/admin/help' },

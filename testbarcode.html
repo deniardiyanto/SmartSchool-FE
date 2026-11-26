@@ -1,0 +1,2024 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>SmartSchool - Attendance Scanner</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+        }
+
+        .app {
+            width: 100%;
+            height: 100vh;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .brand span {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .scanner-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+        }
+
+        /* READY */
+
+        .scanner-status.ready {
+            color: #16a34a;
+        }
+
+        .scanner-status.ready .status-dot {
+            background: #22c55e;
+        }
+
+        /* PROCESSING */
+
+        .scanner-status.processing {
+            color: #d97706;
+        }
+
+        .scanner-status.processing .status-dot {
+            background: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        /* ERROR */
+
+        .scanner-status.error {
+            color: #dc2626;
+        }
+
+        .scanner-status.error .status-dot {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main-content {
+            flex: 1;
+            min-height: 0;
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(400px, 1.4fr)
+                minmax(300px, 1fr)
+                minmax(300px, 1fr);
+
+            gap: 20px;
+        }
+
+        /* =========================
+           SCANNER
+        ========================= */
+
+        .scanner-panel {
+            position: relative;
+
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            display: flex;
+            flex-direction: column;
+
+            justify-content: center;
+            align-items: center;
+
+            text-align: center;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, .06);
+
+            overflow: hidden;
+        }
+
+        .scanner-icon {
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+
+        .scanner-panel h2 {
+            margin: 0 0 5px;
+            font-size: 24px;
+        }
+
+        .scanner-panel p {
+            color: #6b7280;
+            margin: 0 0 20px;
+        }
+
+        .input-group {
+            width: 100%;
+            max-width: 450px;
+
+            display: flex;
+            gap: 10px;
+        }
+
+        #barcodeInput {
+            flex: 1;
+
+            padding: 14px 16px;
+
+            border: 1px solid #d1d5db;
+
+            border-radius: 10px;
+
+            font-size: 16px;
+
+            outline: none;
+        }
+
+        #barcodeInput:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37, 99, 235, .1);
+        }
+
+        /* =========================
+           LOADING
+        ========================= */
+
+        .loading {
+            display: none;
+
+            margin-top: 10px;
+
+            color: #d97706;
+
+            font-size: 14px;
+
+            font-weight: bold;
+        }
+
+        /* =========================
+           RESULT
+        ========================= */
+
+        .result {
+            display: none;
+
+            width: 100%;
+            max-width: 450px;
+
+            margin-top: 20px;
+
+            padding: 18px;
+
+            border-radius: 16px;
+        }
+
+        .result.success {
+            display: block;
+
+            background: #f0fdf4;
+
+            border: 1px solid #bbf7d0;
+
+            color: #166534;
+        }
+
+        .result.error {
+            display: block;
+
+            background: #fef2f2;
+
+            border: 1px solid #fecaca;
+
+            color: #991b1b;
+        }
+
+        .result-title {
+            font-size: 16px;
+
+            font-weight: bold;
+
+            margin-bottom: 6px;
+        }
+
+        .student-name {
+            font-size: 25px;
+
+            font-weight: bold;
+
+            margin-bottom: 3px;
+        }
+
+        .class-name {
+            font-size: 15px;
+
+            margin-bottom: 8px;
+        }
+
+        .attendance-status {
+            display: inline-block;
+
+            padding: 6px 14px;
+
+            border-radius: 20px;
+
+            background: #dcfce7;
+
+            font-weight: bold;
+        }
+
+        .scan-info {
+            margin-top: 12px;
+
+            font-size: 13px;
+
+            line-height: 1.7;
+        }
+
+        /* =========================
+           LIST
+        ========================= */
+
+        .attendance-list {
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 20px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, .06);
+        }
+
+        .list-header {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 15px;
+        }
+
+        .list-header h3 {
+            margin: 0;
+
+            font-size: 18px;
+        }
+
+        .list-date {
+            font-size: 12px;
+
+            color: #9ca3af;
+        }
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            font-size: 13px;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            text-align: left;
+
+            padding: 10px 7px;
+
+            color: #6b7280;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 10px 7px;
+
+            border-bottom:
+                1px solid #f1f5f9;
+        }
+
+        footer {
+            text-align: center;
+
+            margin-top: 15px;
+
+            font-size: 11px;
+
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <header class="app-header">
+
+        <div class="brand">
+
+            <div class="logo">
+                SS
+            </div>
+
+            <div>
+                <h1>SmartSchool</h1>
+                <span>Attendance Scanner</span>
+            </div>
+
+        </div>
+
+        <div class="scanner-status ready">
+
+            <span
+                id="statusDot"
+                class="status-dot">
+            </span>
+
+            <span id="scannerStatus">
+                Scanner Ready
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main-content">
+
+
+        <!-- =========================
+             SCANNER
+        ========================== -->
+
+        <section class="scanner-panel">
+
+            <div class="scanner-icon">
+                📡
+            </div>
+
+            <h2>
+                Silakan Tap Kartu
+            </h2>
+
+            <p>
+                Arahkan barcode ke scanner —
+                scan akan diproses otomatis
+            </p>
+
+
+            <div class="input-group">
+
+                <input
+                    type="text"
+                    id="barcodeInput"
+                    placeholder="Menunggu barcode..."
+                    autocomplete="off"
+                    autofocus
+                >
+
+            </div>
+
+
+            <div
+                id="loading"
+                class="loading"
+            >
+                Memproses...
+            </div>
+
+
+            <!-- =========================
+                 RESULT
+            ========================== -->
+
+            <div
+                id="result"
+                class="result"
+            >
+
+                <div
+                    id="resultTitle"
+                    class="result-title"
+                ></div>
+
+                <div
+                    id="studentName"
+                    class="student-name"
+                ></div>
+
+                <div
+                    id="className"
+                    class="class-name"
+                ></div>
+
+                <div
+                    id="attendanceStatus"
+                    class="attendance-status"
+                ></div>
+
+
+                <div class="scan-info">
+
+                    <div>
+                        RFID:
+                        <span id="cardValue"></span>
+                    </div>
+
+                    <div>
+                        Tipe:
+                        <span id="scanType"></span>
+                    </div>
+
+                    <div>
+                        Waktu:
+                        <span id="scanTime"></span>
+                    </div>
+
+                    <div>
+                        Point:
+                        <span id="point"></span>
+                    </div>
+
+                    <div>
+                        Keterangan:
+                        <span id="reason"></span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             CHECK IN
+        ========================== -->
+
+        <section class="attendance-list">
+
+            <div class="list-header">
+
+                <h3>
+                    Check In
+                </h3>
+
+                <span class="list-date">
+                    Hari Ini
+                </span>
+
+            </div>
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Waktu</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="checkinList">
+
+                    <!-- Data dari API -->
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+
+        <!-- =========================
+             CHECK OUT
+        ========================== -->
+
+        <section class="attendance-list">
+
+            <div class="list-header">
+
+                <h3>
+                    Check Out
+                </h3>
+
+                <span class="list-date">
+                    Hari Ini
+                </span>
+
+            </div>
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Waktu</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="checkoutList">
+
+                    <!-- Data dari API -->
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        SmartSchool Attendance System
+    </footer>
+
+</div>
+
+
+<script>
+
+/*
+ * =========================================================
+ * SMARTSCHOOL - BARCODE ATTENDANCE SCANNER
+ * =========================================================
+ *
+ * Scanner bekerja sebagai USB HID Keyboard.
+ *
+ * TIDAK PERLU ENTER.
+ *
+ * Sistem mendeteksi barcode selesai ketika tidak ada
+ * karakter baru selama SCAN_COMPLETE_DELAY ms.
+ *
+ * =========================================================
+ */
+
+
+/*
+ * =========================================================
+ * API CONFIGURATION
+ * =========================================================
+ */
+
+const API_URL =
+    "http://localhost:5075/api/attendance/scan";
+
+
+/*
+ * Waktu tunggu setelah karakter terakhir.
+ *
+ * Scanner mengirim karakter sangat cepat.
+ * Jika selama 120ms tidak ada karakter baru,
+ * barcode dianggap selesai.
+ */
+
+const SCAN_COMPLETE_DELAY = 120;
+
+
+/*
+ * Delay sebelum scanner kembali siap.
+ */
+
+const RESET_DELAY = 2000;
+
+
+/*
+ * Prevent duplicate scan.
+ */
+
+const DUPLICATE_SCAN_WINDOW = 1500;
+
+
+/*
+ * =========================================================
+ * ELEMENTS
+ * =========================================================
+ */
+
+const barcodeInput =
+    document.getElementById("barcodeInput");
+
+const loading =
+    document.getElementById("loading");
+
+const result =
+    document.getElementById("result");
+
+const resultTitle =
+    document.getElementById("resultTitle");
+
+const studentName =
+    document.getElementById("studentName");
+
+const className =
+    document.getElementById("className");
+
+const attendanceStatus =
+    document.getElementById("attendanceStatus");
+
+const cardValue =
+    document.getElementById("cardValue");
+
+const scanType =
+    document.getElementById("scanType");
+
+const scanTime =
+    document.getElementById("scanTime");
+
+const point =
+    document.getElementById("point");
+
+const reason =
+    document.getElementById("reason");
+
+const checkinList =
+    document.getElementById("checkinList");
+
+const checkoutList =
+    document.getElementById("checkoutList");
+
+const scannerStatus =
+    document.getElementById("scannerStatus");
+
+
+/*
+ * =========================================================
+ * STATE
+ * =========================================================
+ */
+
+let isScanning = false;
+
+let resetTimer = null;
+
+let scanInputTimer = null;
+
+let lastBarcode = "";
+
+let lastScanTime = 0;
+
+
+/*
+ * =========================================================
+ * AUTO SCAN WITHOUT ENTER
+ * =========================================================
+ */
+
+barcodeInput.addEventListener(
+    "input",
+    function () {
+
+        /*
+         * Kalau sedang proses API,
+         * jangan proses scan baru.
+         */
+
+        if (isScanning) {
+            return;
+        }
+
+
+        /*
+         * Reset timer setiap karakter masuk.
+         */
+
+        clearTimeout(scanInputTimer);
+
+
+        /*
+         * Tunggu sampai scanner selesai
+         * mengirim seluruh barcode.
+         */
+
+        scanInputTimer =
+            setTimeout(
+                function () {
+
+                    const barcodeValue =
+                        barcodeInput.value.trim();
+
+
+                    /*
+                     * Abaikan input kosong.
+                     */
+
+                    if (!barcodeValue) {
+                        return;
+                    }
+
+
+                    /*
+                     * Langsung proses.
+                     */
+
+                    scanAttendance();
+
+                },
+                SCAN_COMPLETE_DELAY
+            );
+
+    }
+);
+
+
+/*
+ * =========================================================
+ * HANDLE ENTER
+ * =========================================================
+ *
+ * ENTER tidak lagi diperlukan.
+ *
+ * Jika scanner masih mengirim ENTER,
+ * kita cegah agar tidak mengganggu.
+ */
+
+barcodeInput.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+        }
+
+    }
+);
+
+
+/*
+ * =========================================================
+ * KEEP SCANNER FOCUSED
+ * =========================================================
+ */
+
+window.addEventListener(
+    "load",
+    function () {
+
+        focusScanner();
+
+    }
+);
+
+
+function focusScanner() {
+
+    if (
+        !isScanning &&
+        !barcodeInput.disabled
+    ) {
+
+        barcodeInput.focus();
+
+    }
+
+}
+
+
+/*
+ * Jika operator klik layar,
+ * input scanner kembali mendapatkan focus.
+ */
+
+document.addEventListener(
+    "click",
+    function () {
+
+        if (
+            !isScanning &&
+            !barcodeInput.disabled
+        ) {
+
+            barcodeInput.focus();
+
+        }
+
+    }
+);
+
+
+/*
+ * =========================================================
+ * SCANNER STATUS
+ * =========================================================
+ */
+
+function setScannerStatus(
+    status,
+    message
+) {
+
+    const container =
+        scannerStatus.parentElement;
+
+    container.className =
+        "scanner-status " + status;
+
+    scannerStatus.textContent =
+        message;
+
+}
+
+
+/*
+ * =========================================================
+ * SCAN ATTENDANCE
+ * =========================================================
+ */
+
+async function scanAttendance() {
+
+    const barcodeValue =
+        barcodeInput.value.trim();
+
+
+    /*
+     * Ignore empty scan.
+     */
+
+    if (!barcodeValue) {
+
+        focusScanner();
+
+        return;
+
+    }
+
+
+    /*
+     * Prevent concurrent requests.
+     */
+
+    if (isScanning) {
+        return;
+    }
+
+
+    /*
+     * =====================================================
+     * DUPLICATE SCAN PROTECTION
+     * =====================================================
+     */
+
+    const now =
+        Date.now();
+
+
+    if (
+        barcodeValue === lastBarcode &&
+        now - lastScanTime <
+        DUPLICATE_SCAN_WINDOW
+    ) {
+
+        barcodeInput.value = "";
+
+        focusScanner();
+
+        return;
+
+    }
+
+
+    lastBarcode =
+        barcodeValue;
+
+    lastScanTime =
+        now;
+
+
+    /*
+     * =====================================================
+     * START PROCESS
+     * =====================================================
+     */
+
+    isScanning = true;
+
+    clearTimeout(resetTimer);
+
+    barcodeInput.disabled = true;
+
+    loading.style.display =
+        "block";
+
+    result.className =
+        "result";
+
+    setScannerStatus(
+        "processing",
+        "Processing..."
+    );
+
+
+    try {
+
+        /*
+         * =================================================
+         * CALL API
+         * =================================================
+         */
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            barcodeValue:
+                                barcodeValue
+                        })
+                }
+            );
+
+
+        /*
+         * =================================================
+         * PARSE RESPONSE
+         * =================================================
+         */
+
+        const responseData =
+            await parseJsonResponse(
+                response
+            );
+
+
+        console.log(
+            "Attendance Response:",
+            responseData
+        );
+
+
+        /*
+         * =================================================
+         * HTTP ERROR
+         * =================================================
+         */
+
+        if (!response.ok) {
+
+            throw new Error(
+                getApiErrorMessage(
+                    responseData
+                ) ||
+                `Request gagal. HTTP ${response.status}`
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * BUSINESS ERROR
+         * =================================================
+         */
+
+        if (
+            responseData?.success === false
+        ) {
+
+            throw new Error(
+                getApiErrorMessage(
+                    responseData
+                ) ||
+                "Absensi gagal."
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * SUCCESS DATA
+         * =================================================
+         */
+
+        const data =
+            responseData?.data;
+
+
+        if (!data) {
+
+            throw new Error(
+                "Data absensi tidak ditemukan."
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * SHOW SUCCESS
+         * =================================================
+         */
+
+        showSuccess(
+            responseData
+        );
+
+
+        /*
+         * =================================================
+         * UPDATE LIST
+         * =================================================
+         */
+
+        addAttendanceToList(
+            data
+        );
+
+
+        /*
+         * =================================================
+         * SOUND
+         * =================================================
+         */
+
+        playSuccessSound();
+
+
+        /*
+         * =================================================
+         * STATUS
+         * =================================================
+         */
+
+        setScannerStatus(
+            "ready",
+            "Scan berikutnya..."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Scan error:",
+            error
+        );
+
+
+        /*
+         * =================================================
+         * SHOW ERROR
+         * =================================================
+         */
+
+        showError(
+            error.message ||
+            "Terjadi kesalahan saat memproses absensi."
+        );
+
+
+        /*
+         * =================================================
+         * ERROR SOUND
+         * =================================================
+         */
+
+        playErrorSound();
+
+
+        /*
+         * =================================================
+         * STATUS
+         * =================================================
+         */
+
+        setScannerStatus(
+            "error",
+            "Scan gagal"
+        );
+
+
+    } finally {
+
+        loading.style.display =
+            "none";
+
+
+        /*
+         * Tunggu 2 detik agar hasil terlihat.
+         */
+
+        resetTimer =
+            setTimeout(
+                resetScanner,
+                RESET_DELAY
+            );
+
+    }
+
+}
+
+
+/*
+ * =========================================================
+ * PARSE API RESPONSE
+ * =========================================================
+ */
+
+async function parseJsonResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+
+        return await response.json();
+
+    }
+
+
+    const text =
+        await response.text();
+
+
+    return {
+
+        success:
+            response.ok,
+
+        message:
+            text || null
+
+    };
+
+}
+
+
+/*
+ * =========================================================
+ * API ERROR MESSAGE
+ * =========================================================
+ */
+
+function getApiErrorMessage(
+    responseData
+) {
+
+    if (!responseData) {
+        return null;
+    }
+
+
+    if (
+        Array.isArray(
+            responseData.errors
+        ) &&
+        responseData.errors.length > 0
+    ) {
+
+        return responseData.errors.join(
+            ", "
+        );
+
+    }
+
+
+    return (
+        responseData.message ||
+        responseData.title ||
+        responseData.error ||
+        null
+    );
+
+}
+
+
+/*
+ * =========================================================
+ * SHOW SUCCESS
+ * =========================================================
+ */
+
+function showSuccess(
+    response
+) {
+
+    const data =
+        response.data || {};
+
+
+    result.className =
+        "result success";
+
+
+    resultTitle.textContent =
+        "✓ " +
+        (
+            response.message ||
+            "Absensi berhasil"
+        );
+
+
+    studentName.textContent =
+        data.studentName || "-";
+
+
+    className.textContent =
+        data.classRoomName
+            ? "Kelas " +
+              data.classRoomName
+            : "-";
+
+
+    attendanceStatus.textContent =
+        data.status || "-";
+
+
+    cardValue.textContent =
+        data.barcodeValue || "-";
+
+
+    scanType.textContent =
+        data.scanType || "-";
+
+
+    scanTime.textContent =
+        formatDate(
+            data.scanTime
+        );
+
+
+    point.textContent =
+        data.point ?? 0;
+
+
+    reason.textContent =
+        data.reason || "-";
+
+}
+
+
+/*
+ * =========================================================
+ * SHOW ERROR
+ * =========================================================
+ */
+
+function showError(
+    message
+) {
+
+    result.className =
+        "result error";
+
+
+    resultTitle.textContent =
+        "✕ Absensi gagal";
+
+
+    studentName.textContent =
+        message ||
+        "Terjadi kesalahan";
+
+
+    className.textContent = "";
+
+    attendanceStatus.textContent = "";
+
+    cardValue.textContent = "";
+
+    scanType.textContent = "";
+
+    scanTime.textContent = "";
+
+    point.textContent = "";
+
+    reason.textContent = "";
+
+}
+        /*
+         * =========================================================
+         * ADD ATTENDANCE TO LIST
+         * =========================================================
+         */
+
+        function addAttendanceToList(data) {
+
+            const type =
+                String(data.scanType || "")
+                    .trim()
+                    .toUpperCase();
+
+
+            /*
+             * CHECK IN
+             */
+
+            if (
+                type === "CHECK_IN" ||
+                type === "CHECKIN"
+            ) {
+
+                addToCheckinList(data);
+
+                return;
+            }
+
+
+            /*
+             * CHECK OUT
+             */
+
+            if (
+                type === "CHECK_OUT" ||
+                type === "CHECKOUT"
+            ) {
+
+                addToCheckoutList(data);
+
+                return;
+            }
+
+
+            console.warn(
+                "scanType tidak dikenali:",
+                data.scanType
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * CHECK IN LIST
+         * =========================================================
+         */
+
+        function addToCheckinList(data) {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+                <td></td>
+
+                <td>
+                    ${escapeHtml(
+                        data.studentName || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        data.classRoomName || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${formatTime(
+                        data.scanTime
+                    )}
+                </td>
+            `;
+
+
+            /*
+             * Data terbaru ditampilkan paling atas.
+             */
+
+            checkinList.prepend(row);
+
+
+            /*
+             * Update nomor.
+             */
+
+            updateRowNumbers(
+                checkinList
+            );
+
+
+            /*
+             * Maksimal 10 data.
+             */
+
+            limitRows(
+                checkinList,
+                10
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * CHECK OUT LIST
+         * =========================================================
+         */
+
+        function addToCheckoutList(data) {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+                <td></td>
+
+                <td>
+                    ${escapeHtml(
+                        data.studentName || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        data.classRoomName || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${formatTime(
+                        data.scanTime
+                    )}
+                </td>
+            `;
+
+
+            /*
+             * Data terbaru ditampilkan paling atas.
+             */
+
+            checkoutList.prepend(row);
+
+
+            /*
+             * Update nomor.
+             */
+
+            updateRowNumbers(
+                checkoutList
+            );
+
+
+            /*
+             * Maksimal 10 data.
+             */
+
+            limitRows(
+                checkoutList,
+                10
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * UPDATE ROW NUMBERS
+         * =========================================================
+         */
+
+        function updateRowNumbers(tbody) {
+
+            const rows =
+                tbody.querySelectorAll("tr");
+
+
+            rows.forEach(
+                (row, index) => {
+
+                    if (row.children[0]) {
+
+                        row.children[0]
+                            .textContent =
+                            index + 1;
+
+                    }
+
+                }
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * LIMIT ROWS
+         * =========================================================
+         */
+
+        function limitRows(
+            tbody,
+            maxRows
+        ) {
+
+            while (
+                tbody.children.length >
+                maxRows
+            ) {
+
+                tbody.removeChild(
+                    tbody.lastElementChild
+                );
+
+            }
+
+        }
+
+
+        /*
+         * =========================================================
+         * RESET SCANNER
+         * =========================================================
+         */
+
+        function resetScanner() {
+
+            /*
+             * Clear timer reset.
+             */
+
+            clearTimeout(
+                resetTimer
+            );
+
+
+            /*
+             * Clear auto scan timer.
+             */
+
+            clearTimeout(
+                scanInputTimer
+            );
+
+
+            /*
+             * Scanner kembali idle.
+             */
+
+            isScanning =
+                false;
+
+
+            /*
+             * Bersihkan input.
+             */
+
+            barcodeInput.value =
+                "";
+
+
+            /*
+             * Aktifkan kembali input.
+             */
+
+            barcodeInput.disabled =
+                false;
+
+
+            /*
+             * Reset result.
+             */
+
+            result.className =
+                "result";
+
+
+            resultTitle.textContent =
+                "";
+
+
+            studentName.textContent =
+                "";
+
+
+            className.textContent =
+                "";
+
+
+            attendanceStatus.textContent =
+                "";
+
+
+            cardValue.textContent =
+                "";
+
+
+            scanType.textContent =
+                "";
+
+
+            scanTime.textContent =
+                "";
+
+
+            point.textContent =
+                "";
+
+
+            reason.textContent =
+                "";
+
+
+            /*
+             * Scanner Ready.
+             */
+
+            setScannerStatus(
+                "ready",
+                "Scanner Ready"
+            );
+
+
+            /*
+             * Focus kembali ke scanner.
+             */
+
+            barcodeInput.focus();
+
+        }
+
+
+        /*
+         * =========================================================
+         * DATE FORMAT
+         * =========================================================
+         */
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "-";
+            }
+
+
+            const date =
+                new Date(value);
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return "-";
+
+            }
+
+
+            return date.toLocaleString(
+                "id-ID",
+                {
+                    dateStyle: "medium",
+                    timeStyle: "medium"
+                }
+            );
+
+        }
+
+
+        /*
+         * =========================================================
+         * TIME FORMAT
+         * =========================================================
+         */
+
+        function formatTime(value) {
+
+            if (!value) {
+                return "-";
+            }
+
+
+            const date =
+                new Date(value);
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return "-";
+
+            }
+
+
+            return date.toLocaleTimeString(
+                "id-ID",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                }
+            );
+
+        }
+
+
+        /*
+         * =========================================================
+         * ESCAPE HTML
+         * =========================================================
+         */
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+
+            div.textContent =
+                value ?? "";
+
+
+            return div.innerHTML;
+
+        }
+
+
+        /*
+         * =========================================================
+         * SUCCESS SOUND
+         * =========================================================
+         */
+
+        function playSuccessSound() {
+
+            playTone(
+                880,
+                "sine",
+                0.3
+            );
+
+        }
+
+
+        /*
+         * =========================================================
+         * ERROR SOUND
+         * =========================================================
+         */
+
+        function playErrorSound() {
+
+            playTone(
+                300,
+                "sawtooth",
+                0.5
+            );
+
+        }
+
+
+        /*
+         * =========================================================
+         * PLAY TONE
+         * =========================================================
+         */
+
+        function playTone(
+            frequency,
+            type,
+            duration
+        ) {
+
+            try {
+
+                const AudioContext =
+                    window.AudioContext ||
+                    window.webkitAudioContext;
+
+
+                /*
+                 * Browser tidak support Web Audio API.
+                 */
+
+                if (!AudioContext) {
+                    return;
+                }
+
+
+                const audioContext =
+                    new AudioContext();
+
+
+                const oscillator =
+                    audioContext.createOscillator();
+
+
+                const gain =
+                    audioContext.createGain();
+
+
+                /*
+                 * Connect audio.
+                 */
+
+                oscillator.connect(
+                    gain
+                );
+
+
+                gain.connect(
+                    audioContext.destination
+                );
+
+
+                /*
+                 * Setting tone.
+                 */
+
+                oscillator.frequency.value =
+                    frequency;
+
+
+                oscillator.type =
+                    type;
+
+
+                /*
+                 * Volume awal.
+                 */
+
+                gain.gain.setValueAtTime(
+                    0.3,
+                    audioContext.currentTime
+                );
+
+
+                /*
+                 * Fade out.
+                 */
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.01,
+                    audioContext.currentTime +
+                    duration
+                );
+
+
+                /*
+                 * Start.
+                 */
+
+                oscillator.start();
+
+
+                /*
+                 * Stop.
+                 */
+
+                oscillator.stop(
+                    audioContext.currentTime +
+                    duration
+                );
+
+
+                /*
+                 * Close AudioContext setelah selesai.
+                 */
+
+                oscillator.addEventListener(
+                    "ended",
+                    () => {
+
+                        audioContext.close();
+
+                    }
+                );
+
+            }
+
+            catch (error) {
+
+                console.warn(
+                    "Audio tidak dapat dimainkan:",
+                    error
+                );
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -10,6 +10,8 @@ import Students from './pages/Students';
 import Attendance from './pages/Attendance';
 import Violations from './pages/Violations';
 import Settings from './pages/Settings';
+import Reports from './pages/Reports';
+import Help from './pages/Help';
 import { ChevronLeft } from 'lucide-react';
 
 // Placeholder untuk halaman lain
@@ -17,10 +19,10 @@ import { ChevronLeft } from 'lucide-react';
 // const Attendance = () => <div className="p-4 text-gray-500">Halaman Presensi (coming soon)</div>;
 // const Violations = () => <div className="p-4 text-gray-500">Halaman Poin Pelanggaran (coming soon)</div>;
 const Kaih = () => <div className="p-4 text-gray-500">Halaman KAIH (coming soon)</div>;
-const Announcements = () => <div className="p-4 text-gray-500">Halaman Pengumuman (coming soon)</div>;
-const Reports = () => <div className="p-4 text-gray-500">Halaman Laporan (coming soon)</div>;
+// const Announcements = () => <div className="p-4 text-gray-500">Halaman Pengumuman (coming soon)</div>;
+// const Reports = () => <div className="p-4 text-gray-500">Halaman Laporan (coming soon)</div>;
 // const Settings = () => <div className="p-4 text-gray-500">Halaman Pengaturan (coming soon)</div>;
-const Help = () => <div className="p-4 text-gray-500">Halaman Bantuan (coming soon)</div>;
+// const Help = () => <div className="p-4 text-gray-500">Halaman Bantuan (coming soon)</div>;
 
 // Placeholder untuk KAIH dan Profil Wali
 const WaliKaih = () => (
@@ -68,7 +70,7 @@ function App() {
         <Route path="/admin/attendance" element={<Layout><Attendance /></Layout>} />
         <Route path="/admin/violations" element={<Layout><Violations /></Layout>} />
         <Route path="/admin/kaih" element={<Layout><Kaih /></Layout>} />
-        <Route path="/admin/announcements" element={<Layout><Announcements /></Layout>} />
+        {/* <Route path="/admin/announcements" element={<Layout><Announcements /></Layout>} /> */}
         <Route path="/admin/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/admin/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/admin/help" element={<Layout><Help /></Layout>} />
